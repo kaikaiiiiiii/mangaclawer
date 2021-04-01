@@ -1,7 +1,7 @@
 const { firefox } = require('playwright');
 const { chromium } = require('playwright');
 
-const userDataDir = '.\\Profile\\';
+const userDataDir = 'Profile';
 
 
 (async () => {
@@ -14,7 +14,8 @@ const userDataDir = '.\\Profile\\';
   const page = await browser.newPage()
   //await page.goto('https://www.baidu.com');
   //await page.goto('http://whatsmyuseragent.org/');
-  await page.goto('http://www.90mh.com/manhua/zongzhijiushifeichangkeai/108068.html');
+  //await page.goto('http://www.90mh.com/manhua/zongzhijiushifeichangkeai/108068.html');
+  await page.goto('http://www.90mh.com/manhua/zongzhijiushifeichangkeai/');
   const books = await page.$$eval('#chapter-list-10 li a', els => { 
     return els.map(el => { 
       var link = el.href;
