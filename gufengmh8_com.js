@@ -15,7 +15,7 @@ const userDataDir = 'Profile';
   const page = await browser.newPage()
   //await page.goto('https://www.baidu.com');
   //await page.goto('http://whatsmyuseragent.org/');
-  await page.goto('http://www.manhuaju.com/gaoxiao/zongzhijiushifeichangkeai/');
+  await page.goto('https://www.gufengmh8.com/manhua/zongzhijiushifeichangkeai/');
   const books = await page.$$eval('#detail-list-select-1 li a', els => { 
     return els.map(el => { 
       var link = el.href;
