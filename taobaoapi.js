@@ -15,15 +15,23 @@ const userDataDir = 'Profile';
   const page = await browser.newPage()
   //await page.goto('https://www.baidu.com');
   //await page.goto('http://whatsmyuseragent.org/');
-  await page.goto('http://www.manhuaju.com/gaoxiao/zongzhijiushifeichangkeai/');
-  const books = await page.$$eval('#detail-list-select-1 li a', els => { 
-    return els.map(el => { 
-      var link = el.href;
-      var title = el.innerText;
-      return { link, title };
-    });
+  await page.goto('https://open.taobao.com/api.htm?docId=4&docType=2');
+  await page.waitForSelector('.leftMenuScrollDiv');
+  const list = await page.$$eval('.leftMenuScrollDiv .node a', els => {
+    return els.map(el => {
+      var title = el.title
+      var name = el.querySelector('span.text').innerHTML;
+      return { name, title }
+    })
   });
-  console.log(books);
+  console.log(list)
+  // const books = await page.$$eval('#detail-list-select-1 li a', els => { 
+  //   return els.map(el => { 
+  //     var link = el.href;
+  //     var title = el.innerText;
+  //     return { link, title };
+  //   });
+  // });
 // -> 页面数据。
 
 
