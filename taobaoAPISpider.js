@@ -11,7 +11,7 @@ var sheets = [
 var spider = async (list) => {
   var urls = list;
   const browser = await chromium.launchPersistentContext(userDataDir,{
-    headless: false,
+    headless: true,
     //proxy: {server: 'localhost:1080'},
     timeout: 0,
     userAgent:'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.82 Safari/537.36',
@@ -32,7 +32,7 @@ var spider = async (list) => {
     });
     console.log(papa.unparse(contents, { 'header': false }));
   }
-  await browser.close();
+  //await browser.close();
 }
 
 spider(sheets);
