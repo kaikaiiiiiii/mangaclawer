@@ -21,6 +21,7 @@ var spider = async (list) => {
     let url = urls[i];
     await page.goto(url);
     await page.waitForSelector('.leftMenuScrollDiv');
+    await delay(1000);
     var contents = await page.$$eval('.leftMenuScrollDiv .node a', els => {
       return els.map(el => {
         var info = el.querySelector('span.text').innerText.split('\n');
@@ -30,7 +31,6 @@ var spider = async (list) => {
       })
     });
     console.log(papa.unparse(contents, { 'header': false }));
-    //await delay(1000);
   }
   await browser.close();
 }
