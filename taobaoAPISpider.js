@@ -142,3 +142,10 @@ const readCSV = async (csvpath) => {
 
 })();
 
+
+/*
+var gmailObject = {
+  user: 'yourkaikai','lurenjia','94'
+  pass: 'eondipjjxkvuisza','nlwohddmwiaqtvci','tucnwzazwxgkbjig'
+}
+*/
