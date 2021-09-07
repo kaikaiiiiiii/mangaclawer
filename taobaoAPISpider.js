@@ -118,7 +118,7 @@ const readCSV = async csvpath => {
         })
         .join("");
 
-    var mailcontent = `<table><tr><td>name</td><td>title</td><td>status</td></tr>` + tablehtml + `</table>`;
+    var mailcontent = `<table style="border: 1px solid black" rules='all'><tr><td>name</td><td>title</td><td>status</td></tr>` + tablehtml + `</table>`;
 
 
     var mailtitle = `[+${diffcount.plus} ~${diffcount.keep} -${diffcount.minus}] 淘宝 API 监测每日报告`;
