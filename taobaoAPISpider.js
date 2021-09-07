@@ -15,6 +15,7 @@ var sheets = [
     "https://open.taobao.com/api.htm?docId=43245&docType=2", //信息流（超级推荐）
     "https://open.taobao.com/api.htm?docId=27807&docType=2" //钻展
 ];
+var to = ["wukaiyu@mininglamp.com", "yaoyingjun@mininglamp.com", "sunyue@mininglamp.com"]; //对方的邮箱
 
 var spider = async list => {
     var string = [];
@@ -99,9 +100,9 @@ const readCSV = async csvpath => {
     });
     var diffdata = Object.values(diff);
     //转成 html。
-    var row = "<tr>name</tr><tr>title</tr><tr>status</tr>";
     var tablehtml = diffdata
         .map(e => {
+            var row = '';
             if (e.status == "-") {
                 row += `<tr style='color:red'>`;
             } else if (e.status == "+") {
@@ -117,38 +118,36 @@ const readCSV = async csvpath => {
         })
         .join("");
 
-  var mailcontent = `<table><tr>name</tr><tr>title</tr><tr>status</tr>` + tablehtml + `</table>`;
-  
-  var mailtitle = `[+${diffcount.plus} ~${diffcount.keep} -${diffcount.minus}] 淘宝 API 监测每日报告`;
+    var mailcontent = `<table><tr><td>name</td><td>title</td><td>status</td></tr>` + tablehtml + `</table>`;
+
+
+    var mailtitle = `[+${diffcount.plus} ~${diffcount.keep} -${diffcount.minus}] 淘宝 API 监测每日报告`;
 
     // 发送邮件函数
-    async function sendMail(title,text) {
+    async function sendMail(title, text) {
         var user = "151493994@qq.com"; //自己的邮箱
         var pass = "gslbexwytehkcadh"; //qq邮箱授权码,如何获取授权码下面有讲
-        var to = ["wukaiyu@mininglamp.com", "yaoyingjun@mininglamp.com"]; //对方的邮箱
         let transporter = nodemailer.createTransport({
             host: "smtp.qq.com",
             port: 587,
             secure: false,
             auth: {
                 user: user,
-                pass: pass 
+                pass: pass
             }
         });
         let info = await transporter.sendMail({
-            from: `${user}`, 
-            to: to, 
-            subject: title, 
+            from: `${user}`,
+            to: to,
+            subject: title,
             html: text
         });
         console.log("发送成功");
     }
 
     // 执行
-    var info = await sendMail(mailtitle,mailcontent);
-
-  fs.appendFileSync('mail.log', info, 'utf-8');
-  
+    await sendMail(mailtitle, mailcontent);
+    
     if (fs.existsSync("spider_old.csv")) {
         fs.unlinkSync("spider_old.csv");
     }
