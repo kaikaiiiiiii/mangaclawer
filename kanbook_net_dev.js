@@ -38,6 +38,7 @@ async function getBookList(url, browser) {
     const [page] = browser.pages();
     let retryCount = 0;
     let bookList = [];
+    let bookinfo = {};
     while (retryCount < retryLimit) {
         try {
             await page.goto(url, { timeout: 60 * 1000 });
@@ -46,24 +47,26 @@ async function getBookList(url, browser) {
             for (let i = 1; i <= sheetCount; i++) {
                 await page.click("#myTab li:nth-child(" + i + ") a");
                 await page.waitForSelector("ol.links-of-books li:nth-child(1)");
-                const books = await page.$$eval("#comic-book-list ol.links-of-books li", els => {
+                const books = await page.$$eval("#comic-book-list ol.links-of-books li a", els => {
                     return els.map(el => {
-                        var link = el.querySelector("a").href;
-                        var title = el.querySelector("a").title;
+                        var link = el.href;
+                        var title = el.title;
                         return { link, title };
                     });
                 });
                 bookList = bookList.concat(books);
             }
+            if(debugflag){console.log(`retryCount: ${retryCount}`)}
+            const bookname = await page.$eval(".comic-main-section h2.comic-title", el => el.innerText);
+            bookinfo = { bookname };
+            break;
         } catch (e) {
             console.log(e);
             retryCount++;
         }
-        // get book info
-        const bookname = await page.$eval(".comic-main-section h2.comic-title", el => el.innerText);
-        const bookinfo = { bookname };
-        return { bookList, bookinfo };
+        
     }
+    return { bookList, bookinfo };
 }
 
 /////////////////////////////////////////////////
@@ -157,7 +160,7 @@ async function main(url) {
 
     const browser = await chromium.launchPersistentContext(userDataDir, {
         viewport: { width: 1600, height: 900 },
-        headless: true,
+        headless: false,
         devtools: true,
         //proxy: {server: 'localhost:1080'},
         timeout: 0,
@@ -181,8 +184,9 @@ async function main(url) {
     });
 
     var { bookList, bookinfo } = await getBookList(bookurl, browser);
-
     bookList.forEach(e => (e.bookname = bookid + "_" + bookinfo.bookname));
+
+    console.log(bookList)
 
     for (let i = 0; i < bookList.length; i++) {
         const book = bookList[i];
