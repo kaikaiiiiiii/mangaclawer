@@ -35,6 +35,7 @@ async function delay(ms) {
 
 /////////////////////////////////////////////////
 async function getBookList(url, browser) {
+
     const [page] = browser.pages();
     let retryCount = 0;
     let bookList = [];
@@ -183,7 +184,12 @@ async function main(url) {
         }
     });
 
+
+    // 判断是否有本地记录，有则从记录开始下载
+
+    // 无，从网页抓取书籍信息，开始下载
     var { bookList, bookinfo } = await getBookList(bookurl, browser);
+
     bookList.forEach(e => (e.bookname = bookid + "_" + bookinfo.bookname));
 
     console.log(bookList)
