@@ -25,8 +25,8 @@ async function getBookList(url, browser) {
   // click tab
   bookList = [];
   for (let i = 1; i <= sheetCount; i++) {
-    await page.click('#myTab li:nth-child(' + i + ') a');
-    await page.waitForSelector('ol.links-of-books li:nth-child(1)');
+    await page.click('#myTab li:nth-child(' + i + ')');
+    await page.waitForSelector('#comic-book-list ol.links-of-books li');
     const books = await page.$$eval('#comic-book-list ol.links-of-books li', els => {
       return els.map(el => {
         var link = el.querySelector('a').href;
@@ -128,7 +128,7 @@ async function main(url) {
 
   const browser = await chromium.launchPersistentContext(userDataDir, {
     viewport: { width: 1600, height: 900 },
-    headless: false,
+    headless: true,
     devtools: true,
     //proxy: {server: 'localhost:1080'},
     timeout: 0,
@@ -144,6 +144,7 @@ async function main(url) {
 
 
   var { bookList, bookinfo } = await getBookList(bookurl, browser);
+  console.log(bookList);
 
   bookList.forEach(e => e.bookname = bookid + '_' + bookinfo.bookname);
 
