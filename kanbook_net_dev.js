@@ -5,10 +5,39 @@ const md5 = require("md5");
 const Zip = require("adm-zip");
 const readlineSync = require("readline-sync");
 
+
+/////////////////////////////////////////////////////////////////
+//// config /////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////
 const userDataDir = "Profile";
 const debugflag = true;
+const retryLimit = 10;
 
-// const readline = readlineSync.question('请输入 startUrl：');
+async function createChromiumInstant() {
+    const browser = await chromium.launchPersistentContext(userDataDir, {
+        viewport: { width: 1600, height: 900 },
+        headless: false,
+        devtools: true,
+        //proxy: {server: 'localhost:1080'},
+        timeout: 0,
+        userAgent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.82 Safari/537.36",
+    });
+    const disabledTypes = ["font", "stylesheet"];
+    const blockedUrls = ["google-analytics.com", "googletagmanage", "ax1x.com", "bdstatic.com"];
+    browser.route("**/*", route => {
+        if (debugflag) {console.log(route.request().url())}
+        if (
+            disabledTypes.includes(route.request().resourceType()) ||
+            blockedUrls.some(url => route.request().url().includes(url))
+        ) { route.abort()} 
+        else {route.continue()}
+    });
+    return browser;
+}
+
+
+let readline = "";
+if(debugflag == false){readline = readlineSync.question('请输入 startUrl：')}
 
 function checkReadline(readline="") {
     if (readline.match(/\d{1,}\/?/)) {
@@ -20,9 +49,11 @@ function checkReadline(readline="") {
     }
 }
 
-const startUrl = checkReadline();
+
+/////////////////////////////////////////////////////////////////
+
+const startUrl = checkReadline(readline);
 const domain = new URL(startUrl).origin;
-const retryLimit = 10;
 
 async function delay(ms) {
     if (debugflag) {
@@ -35,7 +66,6 @@ async function delay(ms) {
 
 /////////////////////////////////////////////////
 async function getBookList(url, browser) {
-
     const [page] = browser.pages();
     let retryCount = 0;
     let bookList = [];
@@ -71,7 +101,6 @@ async function getBookList(url, browser) {
 }
 
 /////////////////////////////////////////////////
-
 async function downBook(book, browser, index) {
     console.log(`>>>> Downloading ${book.bookname} - ${book.title} <<<<`);
 
@@ -155,35 +184,12 @@ async function zipPacking(folder) {
     fs.rmSync(folder, { recursive: true });
 }
 
+
 async function main(url) {
     let bookurl = url;
     let bookid = bookurl.split("/").pop();
 
-    const browser = await chromium.launchPersistentContext(userDataDir, {
-        viewport: { width: 1600, height: 900 },
-        headless: false,
-        devtools: true,
-        //proxy: {server: 'localhost:1080'},
-        timeout: 0,
-        userAgent:
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.82 Safari/537.36",
-    });
-    const disabledTypes = ["font", "stylesheet"];
-    const blockedUrls = ["google-analytics.com", "googletagmanage", "ax1x.com", "bdstatic.com"];
-    browser.route("**/*", route => {
-        if (debugflag) {
-            console.log(route.request().url());
-        }
-        if (
-            disabledTypes.includes(route.request().resourceType()) ||
-            blockedUrls.some(url => route.request().url().includes(url))
-        ) {
-            route.abort();
-        } else {
-            route.continue();
-        }
-    });
-
+    const browser = await createChromiumInstant();
 
     // 判断是否有本地记录，有则从记录开始下载
 
@@ -198,6 +204,8 @@ async function main(url) {
         const book = bookList[i];
         await downBook(book, browser, i);
     }
+    
+    browser.close();
 }
 
 main(startUrl);
