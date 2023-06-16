@@ -4,6 +4,7 @@ const path = require("path");
 const md5 = require("md5");
 const Zip = require("adm-zip");
 const readlineSync = require("readline-sync");
+const papa = require("papaparse");
 
 
 /////////////////////////////////////////////////////////////////
@@ -55,6 +56,9 @@ function checkReadline(readline="") {
 const startUrl = checkReadline(readline);
 const domain = new URL(startUrl).origin;
 
+/////////////////////////////////////////////////
+
+
 async function delay(ms) {
     if (debugflag) {
         console.log(`delay ${ms}ms`);
@@ -64,7 +68,29 @@ async function delay(ms) {
     });
 }
 
-/////////////////////////////////////////////////
+function readCSV(csv) {
+    return new Promise((resolve, reject) => {
+        papa.parse(csv, {
+            header: true,
+            dynamicTyping: true,
+            skipEmptyLines: true,
+            complete: function (result) {
+                resolve(result.data);
+            },
+        });
+    });
+}
+
+function writeCSV(content, filename) {
+    let towrite = papa.unparse(content, {
+        header: true,
+        newline: "\r\n",
+    });
+    let f = path.join(__dirname, filename);
+    if (fs.existsSync(f)) {fs.unlinkSync(f)}
+    fs.writeFileSync(f, towrite, "utf8");
+}
+
 async function getBookList(url, browser) {
     const [page] = browser.pages();
     let retryCount = 0;
@@ -80,8 +106,8 @@ async function getBookList(url, browser) {
                 await page.waitForSelector("ol.links-of-books li:nth-child(1)");
                 const books = await page.$$eval("#comic-book-list ol.links-of-books li a", els => {
                     return els.map(el => {
-                        var link = el.href;
-                        var title = el.title;
+                        let link = el.href;
+                        let title = el.title;
                         return { link, title };
                     });
                 });
@@ -129,12 +155,12 @@ async function downBook(book, browser, index) {
         function getResponshand() {
             return function (res) {
                 if (res.status() != "302") {
-                    var url = res.url();
-                    var name = url.split("/").pop().split("?")[0];
+                    let url = res.url();
+                    let name = url.split("/").pop().split("?")[0];
                     res.body()
                         .then(b => {
                             if (b.length > 0) {
-                                var imgpath = path.join(episodeFolder, name);
+                                let imgpath = path.join(episodeFolder, name);
                                 if (!fs.existsSync(imgpath)) {
                                     fs.writeFileSync(imgpath, b);
                                     console.log(url + " >> " + imgpath);
@@ -177,7 +203,7 @@ async function downBook(book, browser, index) {
 }
 
 async function zipPacking(folder) {
-    var pkg = new Zip();
+    let pkg = new Zip();
     await delay(10 * 1000);
     pkg.addLocalFolder(folder);
     pkg.writeZip(folder + ".zip");
@@ -188,13 +214,16 @@ async function zipPacking(folder) {
 async function main(url) {
     let bookurl = url;
     let bookid = bookurl.split("/").pop();
-
     const browser = await createChromiumInstant();
-
     // 判断是否有本地记录，有则从记录开始下载
+    let o = {};
+    if (fs.existsSync(bookid+"_db.csv")) {
+    }
 
     // 无，从网页抓取书籍信息，开始下载
-    var { bookList, bookinfo } = await getBookList(bookurl, browser);
+    let { bookList, bookinfo } = await getBookList(bookurl, browser);
+
+
 
     bookList.forEach(e => (e.bookname = bookid + "_" + bookinfo.bookname));
 
@@ -204,7 +233,7 @@ async function main(url) {
         const book = bookList[i];
         await downBook(book, browser, i);
     }
-    
+
     browser.close();
 }
 
