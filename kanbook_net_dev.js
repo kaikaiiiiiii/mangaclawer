@@ -57,12 +57,7 @@ function checkReadline(readline = "") {
     }
 }
 
-
-
-/////////////////////////////////////////////////
-
-
-async function delay(ms) {
+function delay(ms) {
     if (debugflag) {
         console.log(`delay ${ms}ms`);
     }
