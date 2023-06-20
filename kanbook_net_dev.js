@@ -26,21 +26,28 @@ async function createChromiumInstant() {
     const disabledTypes = ["font", "stylesheet"];
     const blockedUrls = ["google-analytics.com", "googletagmanage", "ax1x.com", "bdstatic.com"];
     browser.route("**/*", route => {
-        if (debugflag) {console.log(route.request().url())}
+        if (debugflag) { console.log(route.request().url()) }
         if (
             disabledTypes.includes(route.request().resourceType()) ||
             blockedUrls.some(url => route.request().url().includes(url))
-        ) { route.abort()} 
-        else {route.continue()}
+        ) { route.abort() }
+        else { route.continue() }
     });
     return browser;
 }
 
 
 let readline = "";
-if(debugflag == false){readline = readlineSync.question('请输入 startUrl：')}
+if (debugflag == false) { readline = readlineSync.question('请输入 startUrl：') }
 
-function checkReadline(readline="") {
+const startUrl = checkReadline(readline);
+const domain = new URL(startUrl).origin;
+
+main(startUrl);
+
+// functions below
+
+function checkReadline(readline = "") {
     if (readline.match(/\d{1,}\/?/)) {
         return "https://www.kanbook.net/comic/" + readline;
     } else if (readline.match(/http(s)?:\/\/(www\.)?kanbook\.net\/comic\/\d{1,}\/?/)) {
@@ -51,10 +58,6 @@ function checkReadline(readline="") {
 }
 
 
-/////////////////////////////////////////////////////////////////
-
-const startUrl = checkReadline(readline);
-const domain = new URL(startUrl).origin;
 
 /////////////////////////////////////////////////
 
@@ -63,7 +66,7 @@ async function delay(ms) {
     if (debugflag) {
         console.log(`delay ${ms}ms`);
     }
-    return new Promise(resolve => {
+    return new Promise((resolve) => {
         setTimeout(resolve, ms);
     });
 }
@@ -87,7 +90,7 @@ function writeCSV(content, filename) {
         newline: "\r\n",
     });
     let f = path.join(__dirname, filename);
-    if (fs.existsSync(f)) {fs.unlinkSync(f)}
+    if (fs.existsSync(f)) { fs.unlinkSync(f) }
     fs.writeFileSync(f, towrite, "utf8");
 }
 
@@ -100,7 +103,7 @@ async function getBookList(url, browser) {
         try {
             await page.goto(url, { timeout: 60 * 1000 });
             await page.waitForSelector("#myTab");
-            const sheetCount = await page.$$eval("#myTab li", els => els.length);
+            const sheetCount = await page.$$eval("#myTab li", (els) => els.length);
             for (let i = 1; i <= sheetCount; i++) {
                 await page.click("#myTab li:nth-child(" + i + ") a");
                 await page.waitForSelector("ol.links-of-books li:nth-child(1)");
@@ -113,15 +116,16 @@ async function getBookList(url, browser) {
                 });
                 bookList = bookList.concat(books);
             }
-            if(debugflag){console.log(`retryCount: ${retryCount}`)}
-            const bookname = await page.$eval(".comic-main-section h2.comic-title", el => el.innerText);
+            if (debugflag) {
+                console.log(`retryCount: ${retryCount}`);
+            }
+            const bookname = await page.$eval(".comic-main-section h2.comic-title", (el) => el.innerText);
             bookinfo = { bookname };
             break;
         } catch (e) {
             console.log(e);
             retryCount++;
         }
-        
     }
     return { bookList, bookinfo };
 }
@@ -144,8 +148,8 @@ async function downBook(book, browser, index) {
     const page = await browser.newPage();
     await page.goto(book.link, { timeout: 60 * 1000 });
     await page.waitForSelector("#page-selector");
-    const sheetsNo = await page.$$eval("#page-selector option", els => {
-        return els.map(el => {
+    const sheetsNo = await page.$$eval("#page-selector option", (els) => {
+        return els.map((el) => {
             return el.value;
         });
     });
@@ -158,7 +162,7 @@ async function downBook(book, browser, index) {
                     let url = res.url();
                     let name = url.split("/").pop().split("?")[0];
                     res.body()
-                        .then(b => {
+                        .then((b) => {
                             if (b.length > 0) {
                                 let imgpath = path.join(episodeFolder, name);
                                 if (!fs.existsSync(imgpath)) {
@@ -177,7 +181,7 @@ async function downBook(book, browser, index) {
                                 }
                             }
                         })
-                        .catch(e => {
+                        .catch((e) => {
                             console.log(e);
                             i--;
                         });
@@ -217,7 +221,7 @@ async function main(url) {
     const browser = await createChromiumInstant();
     // 判断是否有本地记录，有则从记录开始下载
     let o = {};
-    if (fs.existsSync(bookid+"_db.csv")) {
+    if (fs.existsSync(bookid + "_db.csv")) {
     }
 
     // 无，从网页抓取书籍信息，开始下载
@@ -225,9 +229,9 @@ async function main(url) {
 
 
 
-    bookList.forEach(e => (e.bookname = bookid + "_" + bookinfo.bookname));
+    bookList.forEach((e) => (e.bookname = bookid + "_" + bookinfo.bookname));
 
-    console.log(bookList)
+    console.log(bookList);
 
     for (let i = 0; i < bookList.length; i++) {
         const book = bookList[i];
@@ -236,5 +240,3 @@ async function main(url) {
 
     browser.close();
 }
-
-main(startUrl);
